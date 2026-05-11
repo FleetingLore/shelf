@@ -23,33 +23,35 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - name: Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          python-version: "3.11"
+          cache: true
 
-      - name: Cache pip packages
+      - name: Cache cargo registry
         uses: actions/cache@v4
         with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-pip-
+            ${{ runner.os }}-cargo-
 
-      - name: Install MkDocs and Material Theme
-        run: |
-          pip install mkdocs mkdocs-material
+      - name: Install lore-pages
+        run: cargo install lore-pages --locked
 
-      - name: Build with MkDocs
-        run: mkdocs build --site-dir site
+      - name: Build with lore-pages
+        run: lore-pages
 
       - name: Add .nojekyll
-        run: touch site/.nojekyll
+        run: touch docs-target/.nojekyll
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: site
+          path: docs-target
 
   deploy:
     environment:
